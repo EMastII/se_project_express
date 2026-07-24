@@ -7,21 +7,21 @@ const {
   removeLike,
   deleteItem,
 } = require("../controllers/clothingItems");
-//CRUD
+//  CRUD
 
-//Read
+//  Read
 router.get("/", getItems);
 
-//Create
+//  Create
 router.post("/", createItem);
 
-//Delete
+//  Delete
 router.delete("/:id", deleteItem);
 
-//Like
+//  Like
 router.put("/:id/likes", addLike);
 
-//Unlike
+//  Unlike
 router.delete("/:id/likes", removeLike);
 
 module.exports = router;

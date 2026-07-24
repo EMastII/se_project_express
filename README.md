@@ -1,9 +1,37 @@
 # WTWR (What to Wear?): Back End
-The back-end project is focused on creating a server for the WTWR application. You’ll gain a deeper understanding of how to work with databases, set up security and testing, and deploy web applications on a remote machine. The eventual goal is to create a server with an API and user authorization.
+
+## Project Overview
+
+The WTWR backend provides a REST API for storing and managing users and clothing items for the What to Wear application. It supports user creation, item creation, item deletion, item liking/unliking, and retrieving users and items from MongoDB.
+
+## Features
+
+- User registration via `POST /users`
+- Retrieve users with `GET /users` and `GET /users/:userId`
+- Create clothing items with `POST /items`
+- Retrieve all items with `GET /items`
+- Delete items with `DELETE /items/:id`
+- Like items with `PUT /items/:id/likes`
+- Unlike items with `DELETE /items/:id/likes`
+- Validation of URLs and request data
+- Error handling for invalid requests, invalid IDs, and missing resources
+
+## Technologies
+
+- Node.js
+- Express.js
+- MongoDB with Mongoose
+- validator package for URL validation
+- ESLint with Airbnb base config
+- Prettier for code formatting
+- Nodemon for local development
+
 ## Running the Project
-`npm run start` — to launch the server 
 
-`npm run dev` — to launch the server with the hot reload feature
+- `npm run start` — launch server on `localhost:3001`
+- `npm run dev` — launch server with hot reload enabled
+- `npm run lint` — run the linter
 
-### Testing
-Before committing your code, make sure you edit the file `sprint.txt` in the root folder. The file `sprint.txt` should contain the number of the sprint you're currently working on. For ex. 12
+## Notes
+
+Before committing your code, update `sprint.txt` in the root folder with the current sprint number, for example `12`.
