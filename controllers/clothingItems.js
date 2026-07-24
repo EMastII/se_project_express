@@ -1,11 +1,14 @@
 const mongoose = require("mongoose");
 const ClothingItem = require("../models/clothingItems");
+const { BAD_REQUEST_ERROR, SERVER_ERROR } = require("../utils/errors");
 
 const getItems = (req, res) => {
   ClothingItem.find({})
     .then((items) => res.send(items))
     .catch(() => {
-      res.status(500).send({ message: "Error from getItems" });
+      res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -18,10 +21,12 @@ const createItem = (req, res) => {
     .catch((evt) => {
       console.error("createItem error:", evt.name, evt.message);
       if (evt.name === "ValidationError") {
-        return res.status(400).send({ message: evt.message });
+        return res.status(BAD_REQUEST_ERROR).send({ message: evt.message });
       }
 
-      return res.status(500).send({ message: "Error from createItem" });
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -29,7 +34,7 @@ const addLike = (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).send({ message: "Invalid item id" });
+    return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid item id" });
   }
 
   const userId = req.user._id;
@@ -48,9 +53,13 @@ const addLike = (req, res) => {
     .catch((evt) => {
       console.error("addLike error:", evt.name, evt.message);
       if (evt.name === "CastError") {
-        return res.status(400).send({ message: "Invalid item id" });
+        return res
+          .status(BAD_REQUEST_ERROR)
+          .send({ message: "Invalid item id" });
       }
-      return res.status(500).send({ message: "Error from addLike" });
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -58,7 +67,7 @@ const removeLike = (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).send({ message: "Invalid item id" });
+    return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid item id" });
   }
 
   const userId = req.user._id;
@@ -77,9 +86,13 @@ const removeLike = (req, res) => {
     .catch((evt) => {
       console.error("removeLike error:", evt.name, evt.message);
       if (evt.name === "CastError") {
-        return res.status(400).send({ message: "Invalid item id" });
+        return res
+          .status(BAD_REQUEST_ERROR)
+          .send({ message: "Invalid item id" });
       }
-      return res.status(500).send({ message: "Error from removeLike" });
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -87,7 +100,7 @@ const deleteItem = (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(400).send({ message: "Invalid item id" });
+    return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid item id" });
   }
 
   return ClothingItem.findByIdAndDelete(id)
@@ -100,9 +113,13 @@ const deleteItem = (req, res) => {
     .catch((evt) => {
       console.error("deleteItem error:", evt.name, evt.message);
       if (evt.name === "CastError") {
-        return res.status(400).send({ message: "Invalid item id" });
+        return res
+          .status(BAD_REQUEST_ERROR)
+          .send({ message: "Invalid item id" });
       }
-      return res.status(500).send({ message: "Error from deleteItem" });
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
