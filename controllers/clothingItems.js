@@ -4,6 +4,7 @@ const {
   BAD_REQUEST_ERROR,
   FORBIDDEN_ERROR,
   SERVER_ERROR,
+  NOT_FOUND_ERROR,
 } = require("../utils/errors");
 
 const getItems = (req, res) => {

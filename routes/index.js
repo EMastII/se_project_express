@@ -1,6 +1,6 @@
 const router = require("express").Router();
 
-const auth = require("../middlewares/auth.js");
+const auth = require("../middlewares/auth");
 const { NOT_FOUND_ERROR } = require("../utils/errors");
 const { signup, signin } = require("../controllers/users");
 const itemRouter = require("./clothingItems");
