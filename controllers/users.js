@@ -210,7 +210,7 @@ const createUser = (req, res) => {
       if (err.name === "ValidationError") {
         return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
       }
-      return res.status(BAD_REQUEST_ERROR).send({
+      return res.status(SERVER_ERROR).send({
         message: Object.values(err.errors)
           .map((error) => error.message)
           .join(", "),
