@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 const ClothingItem = require("../models/clothingItems");
-const { BAD_REQUEST_ERROR, SERVER_ERROR } = require("../utils/errors");
+const {
+  BAD_REQUEST_ERROR,
+  FORBIDDEN_ERROR,
+  SERVER_ERROR,
+} = require("../utils/errors");
 
 const getItems = (req, res) => {
   ClothingItem.find({})
@@ -103,12 +107,21 @@ const deleteItem = (req, res) => {
     return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid item id" });
   }
 
-  return ClothingItem.findByIdAndDelete(id)
+  return ClothingItem.findById(id)
     .then((item) => {
       if (!item) {
         return res.status(404).send({ message: "Item not found" });
       }
-      return res.send(item);
+
+      if (item.owner.toString() !== req.user._id.toString()) {
+        return res
+          .status(FORBIDDEN_ERROR)
+          .send({ message: "You do not have permission to delete this item" });
+      }
+
+      return ClothingItem.findByIdAndDelete(id).then((deletedItem) =>
+        res.send(deletedItem)
+      );
     })
     .catch((evt) => {
       console.error("deleteItem error:", evt.name, evt.message);
