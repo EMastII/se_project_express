@@ -1,3 +1,5 @@
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const User = require("../models/user");
 const {
@@ -8,7 +10,9 @@ const {
   SERVER_ERROR,
 } = require("../utils/errors");
 
-const signup = (req, res) => {
+const { JWT_SECRET = "dev-secret" } = process.env;
+
+const createUser = (req, res) => {
   const { name, avatar, email, password } = req.body;
 
   if (!email || !password || !name) {
@@ -41,7 +45,9 @@ const signup = (req, res) => {
       .send({ message: "You must enter a valid URL" });
   }
 
-  return User.create({ name, avatar, email, password })
+  return bcrypt
+    .hash(password, 10)
+    .then((hash) => User.create({ name, avatar, email, password: hash }))
     .then((user) => {
       const userData = user.toObject();
       delete userData.password;
@@ -87,15 +93,29 @@ const signin = (req, res) => {
           .send({ message: "Invalid email or password" });
       }
 
-      if (user.password !== password) {
-        return res
-          .status(UNAUTHORIZED_ERROR)
-          .send({ message: "Invalid email or password" });
-      }
+      return bcrypt.compare(password, user.password).then((matched) => {
+        if (!matched) {
+          return res
+            .status(UNAUTHORIZED_ERROR)
+            .send({ message: "Invalid email or password" });
+        }
 
-      const userData = user.toObject();
-      delete userData.password;
-      return res.status(200).send(userData);
+        const userData = user.toObject();
+        delete userData.password;
+
+        const token = jwt.sign({ _id: user._id.toString() }, JWT_SECRET, {
+          expiresIn: "7d",
+        });
+
+        res.cookie("jwt", token, {
+          httpOnly: true,
+          sameSite: "strict",
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: "/",
+        });
+
+        return res.status(200).send({ token, ...userData });
+      });
     })
     .catch((err) => {
       console.error(err);
@@ -176,48 +196,6 @@ const getUsers = (req, res) =>
         .send({ message: "An error has occurred on the server." });
     });
 
-const createUser = (req, res) => {
-  const { name, avatar } = req.body;
-
-  if (!name) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: 'The "name" field must be filled in' });
-  }
-
-  if (name.length < 2) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: 'The minimum length of the "name" field is 2' });
-  }
-
-  if (name.length > 30) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: 'The maximum length of the "name" field is 30' });
-  }
-
-  if (avatar && !validator.isURL(avatar)) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: "You must enter a valid URL" });
-  }
-
-  return User.create({ name, avatar })
-    .then((user) => res.status(201).send(user))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
-      }
-      return res.status(SERVER_ERROR).send({
-        message: Object.values(err.errors)
-          .map((error) => error.message)
-          .join(", "),
-      });
-    });
-};
-
 const getUser = (req, res) => {
   const { userId } = req.params;
   return User.findById(userId)
@@ -240,7 +218,7 @@ const getUser = (req, res) => {
 };
 
 module.exports = {
-  signup,
+  signup: createUser,
   signin,
   getCurrentUser,
   updateUser,

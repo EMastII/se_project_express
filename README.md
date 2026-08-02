@@ -6,7 +6,10 @@ The WTWR backend provides a REST API for storing and managing users and clothing
 
 ## Features
 
-- User registration via `POST /users`
+- User registration via `POST /signup`
+- User login via `POST /signin`
+- Retrieve the current user with `GET /users/me`
+- Update the current user with `PATCH /users/me`
 - Retrieve users with `GET /users` and `GET /users/:userId`
 - Create clothing items with `POST /items`
 - Retrieve all items with `GET /items`

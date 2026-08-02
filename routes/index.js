@@ -9,10 +9,11 @@ const userRouter = require("./users");
 router.post("/signup", signup);
 router.post("/signin", signin);
 
+router.use("/items", itemRouter);
+
 router.use(auth);
 
 router.use("/users", userRouter);
-router.use("/items", itemRouter);
 
 router.use((req, res) => {
   res.status(NOT_FOUND_ERROR).send({ message: "Router not found" });

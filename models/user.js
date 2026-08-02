@@ -20,17 +20,18 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
+    required: [true, "The email field is required"],
     unique: true,
-    sparse: true,
     validate: {
       validator(value) {
-        return !value || validator.isEmail(value);
+        return validator.isEmail(value);
       },
       message: 'The "email" field must be a valid email',
     },
   },
   password: {
     type: String,
+    required: [true, "The password field is required"],
     select: false,
   },
 });

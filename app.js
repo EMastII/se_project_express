@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require("cors");
 const mongoose = require("mongoose");
 const mainRouter = require("./routes/index");
 const { SERVER_ERROR } = require("./utils/errors");
@@ -12,22 +13,20 @@ mongoose
   .then(() => {})
   .catch(console.error);
 
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 app.use("/", mainRouter);
 
-app.use(
-  // eslint-disable-next-line no-unused-vars
-  (err, req, res, next) => {
-    console.error(err);
-    const { statusCode = SERVER_ERROR, message } = err;
-    res.status(statusCode).send({
-      message:
-        statusCode === SERVER_ERROR
-          ? "An error has occurred on the server."
-          : message,
-    });
-  }
-);
+app.use((err, req, res, _next) => {
+  console.error(err);
+  const { statusCode = SERVER_ERROR, message } = err;
+  res.status(statusCode).send({
+    message:
+      statusCode === SERVER_ERROR
+        ? "An error has occurred on the server."
+        : message,
+  });
+});
 
 app.listen(PORT, () => {});
