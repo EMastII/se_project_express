@@ -38,3 +38,7 @@ The WTWR backend provides a REST API for storing and managing users and clothing
 ## Notes
 
 Before committing your code, update `sprint.txt` in the root folder with the current sprint number, for example `12`.
+
+## Demo Video
+
+- https://www.youtube.com/watch?v=Tn6H8HOgsbo

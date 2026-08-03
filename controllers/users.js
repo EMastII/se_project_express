@@ -56,7 +56,7 @@ const createUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
+        return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid data" });
       }
       if (err.code === 11000) {
         return res
@@ -84,41 +84,26 @@ const signin = (req, res) => {
       .send({ message: 'The "email" field must be a valid email' });
   }
 
-  return User.findOne({ email })
-    .select("+password")
+  return User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      res.cookie("jwt", token, {
+        httpOnly: true,
+        sameSite: "strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+      });
+      return res.send({ token });
+    })
+    .catch((err) => {
+      console.error(err);
+      if (err && err.message === "Invalid email or password") {
         return res
           .status(UNAUTHORIZED_ERROR)
           .send({ message: "Invalid email or password" });
       }
-
-      return bcrypt.compare(password, user.password).then((matched) => {
-        if (!matched) {
-          return res
-            .status(UNAUTHORIZED_ERROR)
-            .send({ message: "Invalid email or password" });
-        }
-
-        const userData = user.toObject();
-        delete userData.password;
-
-        const token = jwt.sign({ _id: user._id.toString() }, JWT_SECRET, {
-          expiresIn: "7d",
-        });
-
-        res.cookie("jwt", token, {
-          httpOnly: true,
-          sameSite: "strict",
-          maxAge: 7 * 24 * 60 * 60 * 1000,
-          path: "/",
-        });
-
-        return res.status(200).send({ token, ...userData });
-      });
-    })
-    .catch((err) => {
-      console.error(err);
       return res
         .status(SERVER_ERROR)
         .send({ message: "An error has occurred on the server." });
@@ -175,7 +160,7 @@ const updateUser = (req, res) => {
     .catch((err) => {
       console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST_ERROR).send({ message: err.message });
+        return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid data" });
       }
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND_ERROR).send({ message: "User not found" });

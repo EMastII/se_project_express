@@ -26,7 +26,7 @@ const createItem = (req, res) => {
     .catch((evt) => {
       console.error("createItem error:", evt.name, evt.message);
       if (evt.name === "ValidationError") {
-        return res.status(BAD_REQUEST_ERROR).send({ message: evt.message });
+        return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid data" });
       }
 
       return res
