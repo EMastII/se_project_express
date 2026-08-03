@@ -1,3 +1,5 @@
+const { UNAUTHORIZED_ERROR } = require("../utils/errors");
+
 const jwt = require("jsonwebtoken");
 
 const { JWT_SECRET = "dev-secret" } = process.env;
@@ -43,12 +45,16 @@ module.exports = (req, res, next) => {
     cookies.jwt;
 
   if (!token) {
-    return res.status(401).send({ message: "Authorization required" });
+    return res
+      .status(UNAUTHORIZED_ERROR)
+      .send({ message: "Authorization required" });
   }
 
   return jwt.verify(token, JWT_SECRET, (err, payload) => {
     if (err || !payload || !payload._id) {
-      return res.status(401).send({ message: "Authorization required" });
+      return res
+        .status(UNAUTHORIZED_ERROR)
+        .send({ message: "Authorization required" });
     }
 
     req.user = { _id: payload._id };

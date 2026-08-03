@@ -51,7 +51,7 @@ const addLike = (req, res) => {
   )
     .then((item) => {
       if (!item) {
-        return res.status(404).send({ message: "Item not found" });
+        return res.status(NOT_FOUND_ERROR).send({ message: "Item not found" });
       }
       return res.send(item);
     })
