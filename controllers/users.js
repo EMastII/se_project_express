@@ -2,47 +2,38 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const validator = require("validator");
 const User = require("../models/user");
-const {
-  BAD_REQUEST_ERROR,
-  UNAUTHORIZED_ERROR,
-  NOT_FOUND_ERROR,
-  CONFLICT_ERROR,
-  SERVER_ERROR,
-} = require("../utils/errors");
+const NotFoundError = require("../utils/NotFoundError");
+const BadRequestError = require("../utils/BadRequestError");
+const UnauthorizedError = require("../utils/UnauthorizedError");
+const ConflictError = require("../utils/ConflictError");
 
 const { JWT_SECRET = "dev-secret" } = process.env;
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const { name, avatar, email, password } = req.body;
 
   if (!email || !password || !name) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: "Name, email and password are required" });
+    return next(new BadRequestError("Name, email and password are required"));
   }
 
   if (name.length < 2) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: 'The minimum length of the "name" field is 2' });
+    return next(
+      new BadRequestError('The minimum length of the "name" field is 2')
+    );
   }
 
   if (name.length > 30) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: 'The maximum length of the "name" field is 30' });
+    return next(
+      new BadRequestError('The maximum length of the "name" field is 30')
+    );
   }
 
   if (!validator.isEmail(email)) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: 'The "email" field must be a valid email' });
+    return next(new BadRequestError('The "email" field must be a valid email'));
   }
 
   if (avatar && !validator.isURL(avatar)) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: "You must enter a valid URL" });
+    return next(new BadRequestError("You must enter a valid URL"));
   }
 
   return bcrypt
@@ -54,34 +45,25 @@ const createUser = (req, res) => {
       return res.status(201).send(userData);
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid data" });
+        return next(new BadRequestError("Invalid data"));
       }
       if (err.code === 11000) {
-        return res
-          .status(CONFLICT_ERROR)
-          .send({ message: "This email is already registered" });
+        return next(new ConflictError("This email is already registered"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+      return next(err);
     });
 };
 
-const signin = (req, res) => {
+const signin = (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: "Email and password are required" });
+    return next(new BadRequestError("Email and password are required"));
   }
 
   if (!validator.isEmail(email)) {
-    return res
-      .status(BAD_REQUEST_ERROR)
-      .send({ message: 'The "email" field must be a valid email' });
+    return next(new BadRequestError('The "email" field must be a valid email'));
   }
 
   return User.findUserByCredentials(email, password)
@@ -98,55 +80,64 @@ const signin = (req, res) => {
       return res.send({ token });
     })
     .catch((err) => {
-      console.error(err);
       if (err && err.message === "Invalid email or password") {
-        return res
-          .status(UNAUTHORIZED_ERROR)
-          .send({ message: "Invalid email or password" });
+        return next(new UnauthorizedError("Invalid email or password"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+      return next(err);
     });
 };
 
-const getCurrentUser = (req, res) =>
+const getCurrentUser = (req, res, next) =>
   User.findById(req.user._id)
-    .orFail()
-    .then((user) => res.status(200).send(user))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND_ERROR).send({ message: "User not found" });
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError("No user with matching ID found");
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+
+      return res.status(200).send(user);
+    })
+    .catch(next);
+
+const getProfile = (req, res, next) =>
+  User.findOne({ _id: req.params.userId })
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError("No user with matching ID found");
+      }
+
+      return res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === "CastError") {
+        return next(
+          new BadRequestError("The id string is in an invalid format")
+        );
+      }
+
+      return next(err);
     });
 
-const updateUser = (req, res) => {
+const updateUser = (req, res, next) => {
   const { name, avatar } = req.body;
   const updateData = {};
 
   if (name !== undefined) {
     if (name.length < 2) {
-      return res
-        .status(BAD_REQUEST_ERROR)
-        .send({ message: 'The minimum length of the "name" field is 2' });
+      return next(
+        new BadRequestError('The minimum length of the "name" field is 2')
+      );
     }
     if (name.length > 30) {
-      return res
-        .status(BAD_REQUEST_ERROR)
-        .send({ message: 'The maximum length of the "name" field is 30' });
+      return next(
+        new BadRequestError('The maximum length of the "name" field is 30')
+      );
     }
     updateData.name = name;
   }
 
   if (avatar !== undefined) {
     if (!validator.isURL(avatar)) {
-      return res
-        .status(BAD_REQUEST_ERROR)
-        .send({ message: "You must enter a valid URL" });
+      return next(new BadRequestError("You must enter a valid URL"));
     }
     updateData.avatar = avatar;
   }
@@ -158,16 +149,13 @@ const updateUser = (req, res) => {
     .orFail()
     .then((user) => res.status(200).send(user))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST_ERROR).send({ message: "Invalid data" });
+        return next(new BadRequestError("Invalid data"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND_ERROR).send({ message: "User not found" });
+        return next(new NotFoundError("User not found"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+      return next(err);
     });
 };
 
@@ -175,6 +163,7 @@ module.exports = {
   signup: createUser,
   signin,
   getCurrentUser,
+  getProfile,
   updateUser,
   createUser,
 };
