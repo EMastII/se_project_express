@@ -41,4 +41,12 @@ Before committing your code, update `sprint.txt` in the root folder with the cur
 
 ## Demo Video
 
-- https://www.youtube.com/watch?v=Tn6H8HOgsbo
+https://youtu.be/Fytye7HrBZg
+
+## Deployed project domain:
+
+https://wtwr.tight-clothes.net
+
+## Frontend GitHub repo:
+
+https://github.com/EMastII/se_project_react.git
